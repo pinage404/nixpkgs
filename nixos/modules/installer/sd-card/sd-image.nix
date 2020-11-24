@@ -1,6 +1,6 @@
 # This module creates a bootable SD card image containing the given NixOS
 # configuration. The generated image is MBR partitioned, with a FAT
-# /boot/firmware partition, and ext4 root partition. The generated image
+# /boot/firmware partition, and f2fs root partition. The generated image
 # is sized to fit its contents, and a boot script automatically resizes
 # the root partition to fit the device on the first boot.
 #
@@ -128,12 +128,28 @@ in
       '';
     };
 
+    rootFilesystemType = mkOption {
+      type = types.nonEmptyStr;
+      default = "f2fs";
+      example = "ext4";
+      description = ''
+        The filesystem type used for the root partition.
+
+        Check supported U-Boot filesystem https://source.denx.de/u-boot/u-boot/-/tree/0f6ff53d55ba254de8a995c2a2f5a313acd40ac7/fs
+      '';
+    };
+
     rootFilesystemCreator = mkOption {
       type = types.oneOf [
         types.package
         types.path
       ];
-      default = ../../../lib/make-ext4-fs.nix;
+      default =
+        {
+          "ext4" = ../../../lib/make-ext4-fs.nix;
+          "f2fs" = ../../../lib/make-f2fs-fs.nix;
+        }
+        ."${config.sdImage.rootFilesystemType}";
       example = ''
         nixpkgs/nixos/lib/make-btrfs-fs.nix
       '';
@@ -154,7 +170,8 @@ in
     firmwareSize = mkOption {
       type = types.int;
       # As of 2019-08-18 the Raspberry pi firmware + u-boot takes ~18MiB
-      default = 30;
+      # A kernel, initrd, and dtbs are about 60MiB, and we want room for at least 2
+      default = 248;
       description = ''
         Size of the /boot/firmware partition, in megabytes.
       '';
@@ -232,7 +249,7 @@ in
       };
       "/" = {
         device = "/dev/disk/by-label/${config.sdImage.rootVolumeLabel}";
-        fsType = "ext4";
+        fsType = config.sdImage.rootFilesystemType;
       };
     };
 
@@ -247,6 +264,7 @@ in
         stdenv,
         dosfstools,
         e2fsprogs,
+        f2fs-tools,
         mtools,
         libfaketime,
         util-linux,
@@ -258,6 +276,7 @@ in
         nativeBuildInputs = [
           dosfstools
           e2fsprogs
+          f2fs-tools
           libfaketime
           mtools
           util-linux
