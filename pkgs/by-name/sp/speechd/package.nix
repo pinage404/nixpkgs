@@ -44,10 +44,38 @@
   svox,
   runtimeShell,
 
+  withPiper ? true,
+  piper-tts,
+  piper-phonemize,
+  rubberband,
+  onnxruntime,
+  autoPatchelfHook,
+  spdlog,
+  # setuptools,
+  # onnxruntime-tools,
+  # onnxruntime-gpu,
+  # onnxruntime-native,
+  # piper-phonemize-native,
+
   libsOnly ? false,
 }:
 
+let
+  piper-src = fetchFromGitHub {
+    owner = "rhasspy";
+    repo = "piper";
+    rev = "2023.11.14-2";
+    hash = "sha256-3ynWyNcdf1ffU3VoDqrEMrm5Jo5Zc5YJcVqwLreRCsI=";
+  };
+in
 stdenv.mkDerivation (finalAttrs: {
+  preUnpack = ''
+    set -o xtrace
+  '';
+  preFailure = ''
+    set +o xtrace
+  '';
+
   name = "speech-dispatcher";
 
   src = fetchFromGitHub {
@@ -79,6 +107,13 @@ stdenv.mkDerivation (finalAttrs: {
     itstool
     texinfo
     python3Packages.wrapPython
+    autoPatchelfHook
+    python3Packages.setuptools
+    # python3Packages.onnxruntime-native
+    # python3Packages.piper-phonemize-native
+    # python3Packages.piper-phonemize-native.espeak-ng
+    # python3Packages.piper-phonemize.onnxruntime-native
+    # python3Packages.piper-phonemize.piper-phonemize-native
   ];
 
   buildInputs = [
@@ -108,6 +143,20 @@ stdenv.mkDerivation (finalAttrs: {
   ]
   ++ lib.optionals withPico [
     svox
+  ]
+  ++ lib.optionals withPiper [
+    # piper-tts
+    piper-phonemize
+    rubberband
+    onnxruntime
+    # piper-src
+    # finalAttrs.src
+    (lib.getLib stdenv.cc.cc)
+    spdlog
+    onnxruntime.dev
+    python3Packages.onnxruntime-tools
+    # onnxruntime-gpu
+    onnxruntime.protobuf
   ];
 
   pythonPath = [
@@ -132,6 +181,17 @@ stdenv.mkDerivation (finalAttrs: {
       (withFeature withEspeak "espeak-ng")
       (withFeature withFlite "flite")
       (withFeature withPico "pico")
+      (withFeature withPiper "piper")
+      # "CXXFLAGS=\"-I${finalAttrs.src}/include -I${lib.getInclude piper-phonemize}/include/piper-phonemize\""
+      # ''\'CXXFLAGS=${
+      #   toString [
+      #     # "-I${finalAttrs.src}/include"
+      #     # "-I${piper-src}/src/cpp"
+      #     # "-I${lib.getInclude piper-phonemize}/include"
+      #     # "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
+      #     # "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+      #   ]
+      # }\' ''
     ];
 
   postPatch = lib.optionalString withPico ''
@@ -141,6 +201,74 @@ stdenv.mkDerivation (finalAttrs: {
   installFlags = [
     "sysconfdir=${placeholder "out"}/etc"
   ];
+
+  env = lib.attrsets.optionalAttrs withPiper {
+    # needs to be declared twice annoyingly
+    ORT_STRATEGY = "system";
+
+    # lib.concatMapStringsSep " " (pkg: "-I${lib.getInclude pkg}/include")
+    CPPFLAGS = toString [
+      "-I${lib.getInclude piper-src}/src/cpp"
+      "-I${lib.getInclude finalAttrs.src}/include"
+      "-I${lib.getInclude piper-phonemize}/include"
+      "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
+      "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+      "-I${lib.getInclude onnxruntime}/include"
+      "-I${lib.getInclude onnxruntime.dev}/include"
+    ];
+    CXXFLAGS = finalAttrs.env.CPPFLAGS;
+    LDFLAGS = toString [
+      "-lpthread"
+      "-L${lib.getLib piper-phonemize}/lib"
+      "-L${lib.getLib onnxruntime}/lib"
+    ];
+  };
+  preConfigure = ''
+    echo "$CPPFLAGS $LDFLAGS";
+  '';
+  # CXXFLAGS = lib.optionals withPiper [
+  #   "-I${lib.getInclude finalAttrs.src}/include"
+  #   "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+  #   "-I${piper-phonemize}/include/piper-phonemize"
+  # ];
+
+  # env.CXXFLAGS = "CXXFLAGS=\"-I${finalAttrs.src}/include -I${lib.getInclude piper-phonemize}/include/piper-phonemize\""; # env.CXXFLAGS = lib.traceValSeq "-I${lib.getInclude piper-phonemize}/include/piper-phonemize";
+  # CXXFLAGS = lib.traceValSeq [
+  #     "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+  #   ];
+  # preConfigure = lib.optionalString withPiper ''
+  #   export CXXFLAGS="${
+  #     toString [
+  #       "-I${finalAttrs.src}/include"
+  #       "-I${piper-src}/src/cpp"
+  #       # "-I${lib.getInclude piper-phonemize}/include"
+  #       # "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
+  #       # "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+  #     ]
+  #   }"
+  #   export CPPFLAGS="$CXXFLAGS"
+  #   export LDFLAGS="-L${lib.getInclude piper-phonemize}/lib"
+  # '';
+  # preConfigure = lib.optionalString withPiper ''
+  #   export CXXFLAGS="$'''{CXXFLAGS:-} -I${finalAttrs.src}/include"
+  #   export CXXFLAGS="$'''{CXXFLAGS:-} -I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+  # '';
+  # export CXXFLAGS="${CXXFLAGS:-} -I${finalAttrs.src}/include -I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+
+  # LDFLAGS = lib.optionals withPiper [
+  #   "-L${lib.getInclude piper-phonemize}/lib"
+  # ];
+
+  # dontUseNinjaBuild = true;
+  preBuild = ''
+    ls -al
+    ls -al src/modules/
+    echo "$(realpath .)/src/modules/Makefile"
+    echo "$(pwd)/src/modules/Makefile"
+    # ls -al $out
+    echo "CPPFLAGS $CPPFLAGS";
+    echo "LDFLAGS $LDFLAGS";
+  '';
 
   postInstall =
     if libsOnly then
