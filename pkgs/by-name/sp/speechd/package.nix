@@ -3,7 +3,7 @@
   lib,
   replaceVars,
   pkg-config,
-  fetchurl,
+  fetchFromGitHub,
   fetchpatch,
   python3Packages,
   gettext,
@@ -48,12 +48,13 @@
 }:
 
 stdenv.mkDerivation (finalAttrs: {
-  pname = "speech-dispatcher";
-  version = "0.12.1";
+  name = "speech-dispatcher";
 
-  src = fetchurl {
-    url = "https://github.com/brailcom/speechd/releases/download/${finalAttrs.version}/speech-dispatcher-${finalAttrs.version}.tar.gz";
-    sha256 = "sha256-sUpSONKH0tzOTdQrvWbKZfoijn5oNwgmf3s0A297pLQ=";
+  src = fetchFromGitHub {
+    owner = "brailcom";
+    repo = "speechd";
+    rev = "22a9a5adfcd300fae0671c42a44d3db940b4147b";
+    sha256 = "sha256-kxjbydolhUF+Cj8ptImwSDLV3Zz6Kcp/4qLgLYqNPCE=";
   };
 
   patches = [
@@ -61,11 +62,6 @@ stdenv.mkDerivation (finalAttrs: {
       utillinux = util-linux;
       # patch context
       bindir = null;
-    })
-    (fetchpatch {
-      name = "use-binsh.patch";
-      url = "https://github.com/brailcom/speechd/commit/66d5fe65cffd4c0ce9cfb4c6d292866ed8726999.diff?full_index=1";
-      hash = "sha256-7R5BH6QmxovvtXoH/T76qu6YMfm1HE+CA0eB0mzwmfY=";
     })
   ]
   ++ lib.optionals (withEspeak && espeak.mbrolaSupport) [

@@ -5,7 +5,7 @@ index 6280f2d9..edf6024c 100644
 @@ -20,4 +20,4 @@ Requires=speech-dispatcher.socket
  [Service]
  Type=simple
- ExecStart=@bindir@/speech-dispatcher -s -t 0
+ ExecStart=@bindir@/speech-dispatcher -s
 -ExecReload=/bin/kill -HUP $MAINPID
 +ExecReload=@utillinux@/bin/kill -HUP $MAINPID
 diff --git a/speech-dispatcherd.service.in b/speech-dispatcherd.service.in
