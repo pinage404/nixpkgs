@@ -56,6 +56,7 @@
   # onnxruntime-gpu,
   # onnxruntime-native,
   # piper-phonemize-native,
+  cmake,
 
   libsOnly ? false,
 }:
@@ -160,6 +161,9 @@ stdenv.mkDerivation (finalAttrs: {
     # python3Packages.onnxruntime-tools
     # onnxruntime-gpu
     # onnxruntime.protobuf
+
+    # ninja: error: loading 'build.ninja': No such file or directory
+    cmake
   ];
 
   pythonPath = [
