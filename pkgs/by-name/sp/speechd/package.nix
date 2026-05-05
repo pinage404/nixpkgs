@@ -56,8 +56,10 @@
   # onnxruntime-gpu,
   # onnxruntime-native,
   # piper-phonemize-native,
-  # ninja,
+  ninja,
   cmake,
+  gcc,
+  buildEnv,
 
   libsOnly ? false,
 }:
@@ -104,13 +106,17 @@ stdenv.mkDerivation (finalAttrs: {
   nativeBuildInputs = [
     pkg-config
     autoreconfHook
+    autoPatchelfHook # for onnxruntime
     gettext
     libtool
     itstool
     texinfo
     python3Packages.wrapPython
     # ninja: error: loading 'build.ninja': No such file or directory
-    # cmake
+    # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: sd_cxxpiper-cxxpiper.o: undefined reference to symbol 'OrtGetApiBase@@VERS_1.24.4'
+    # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: /nix/store/md5h2z781nmqrk4fg9b9vlgsirqc5k37-onnxruntime-1.24.4/lib/libonnxruntime.so.1: error adding symbols: DSO missing from command line
+    cmake
+    ninja
     # autoPatchelfHook
     # python3Packages.setuptools
     # python3Packages.onnxruntime-native
@@ -118,7 +124,6 @@ stdenv.mkDerivation (finalAttrs: {
     # python3Packages.piper-phonemize-native.espeak-ng
     # python3Packages.piper-phonemize.onnxruntime-native
     # python3Packages.piper-phonemize.piper-phonemize-native
-    # ninja
     # python3Packages.scikit-build
     # python3Packages.setuptools
 
@@ -184,7 +189,7 @@ stdenv.mkDerivation (finalAttrs: {
     # onnxruntime
     # piper-src
     # finalAttrs.src
-    # (lib.getLib stdenv.cc.cc)
+    (lib.getLib stdenv.cc.cc)
     # spdlog
     # onnxruntime.dev
     # python3Packages.onnxruntime-tools
@@ -241,9 +246,36 @@ stdenv.mkDerivation (finalAttrs: {
     "sysconfdir=${placeholder "out"}/etc"
   ];
 
+  onnxruntime2 = buildEnv {
+    name = "onnxruntime-env";
+    paths = [ onnxruntime ];
+  };
+
+  dontUseQmakeConfigure = true;
+  dontUseCmakeConfigure = true;
+  dontUseNinjaBuild = true;
+  cmakeFlags = [
+    "-DUSE_SYSTEM_ONNXRUNTIME=ON"
+    "-DUSE_SYSTEM_OPENCV=ON"
+    "-DENABLE_FRONTEND_API=OFF"
+    "-DENABLE_QT=OFF"
+    (lib.cmakeBool "ONNXRuntime_USE_STATIC" false)
+    (lib.cmakeFeature "ONNXRUNTIME_DIR" "${onnxruntime.dev}")
+    (lib.cmakeFeature "onnxruntime_SOURCE_DIR" "${onnxruntime.dev}")
+    (lib.cmakeFeature "ONNXRUNTIME_LIBRARIES" "${lib.getLib onnxruntime}/lib")
+    "-DCMAKE_PREFIX_PATH=${finalAttrs.onnxruntime2}"
+  ];
   env = lib.attrsets.optionalAttrs withPiper {
     #   # needs to be declared twice annoyingly
     #   ORT_STRATEGY = "system";
+    # ORT_LIB_LOCATION = "${onnxruntime}/lib";
+    ORT_LIB_LOCATION = "${lib.getLib onnxruntime}/lib";
+    ORT_STRATEGY = "system";
+    ORT_PREFER_DYNAMIC_LINK = "1";
+    ORT_DYLIB_PATH = "${lib.getLib onnxruntime}/lib/libonnxruntime.so";
+    # LD_LIBRARY_PATH = "${lib.getLib onnxruntime}/lib";
+    LD_LIBRARY_PATH = "${finalAttrs.onnxruntime2}/lib:${lib.makeLibraryPath [ gcc ]}";
+    PIPER_TTS_DIR = "${lib.getBin piper-tts}/bin";
 
     #   # lib.concatMapStringsSep " " (pkg: "-I${lib.getInclude pkg}/include")
     CPPFLAGS = toString [
@@ -256,7 +288,7 @@ stdenv.mkDerivation (finalAttrs: {
 
       # # #include <onnxruntime_cxx_api.h>
       # # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L39
-      # "-I${lib.getInclude onnxruntime}/include"
+      "-I${lib.getInclude onnxruntime}/include"
 
       # #include <json.hpp>
       # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L40
@@ -274,17 +306,24 @@ stdenv.mkDerivation (finalAttrs: {
       # "-I${lib.getInclude onnxruntime.dev}/include"
     ];
     #   CXXFLAGS = finalAttrs.env.CPPFLAGS;
-    # LDFLAGS = toString [
-    #   #     "-lpthread"
+    LDFLAGS = toString [
+      #     "-lpthread"
 
-    #   # # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
-    #   # "-L${lib.getLib piper-phonemize}/lib"
-    #   #     "-L${lib.getLib onnxruntime}/lib"
-    # ];
+      # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
+      # "-L${lib.getLib piper-phonemize}/lib"
+
+      # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: sd_cxxpiper-cxxpiper.o: undefined reference to symbol 'OrtGetApiBase@@VERS_1.24.4'
+      # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: /nix/store/md5h2z781nmqrk4fg9b9vlgsirqc5k37-onnxruntime-1.24.4/lib/libonnxruntime.so.1: error adding symbols: DSO missing from command line
+      "-L${lib.getLib onnxruntime}/lib"
+      "-l${lib.getLib onnxruntime}/lib"
+      "-L/nix/store/md5h2z781nmqrk4fg9b9vlgsirqc5k37-onnxruntime-1.24.4/lib"
+      "-lopenvr"
+      "-lonnxruntime"
+    ];
   };
-  preConfigure = ''
-    echo "$CPPFLAGS $LDFLAGS";
-  '';
+  # preConfigure = ''
+  #   echo "$CPPFLAGS $LDFLAGS";
+  # '';
   # CXXFLAGS = lib.optionals withPiper [
   #   "-I${lib.getInclude finalAttrs.src}/include"
   #   "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
@@ -319,15 +358,15 @@ stdenv.mkDerivation (finalAttrs: {
   # ];
 
   # dontUseNinjaBuild = true;
-  preBuild = ''
-    ls -al
-    ls -al src/modules/
-    echo "$(realpath .)/src/modules/Makefile"
-    echo "$(pwd)/src/modules/Makefile"
-    # ls -al $out
-    echo "CPPFLAGS $CPPFLAGS";
-    echo "LDFLAGS $LDFLAGS";
-  '';
+  # preBuild = ''
+  #   ls -al
+  #   ls -al src/modules/
+  #   echo "$(realpath .)/src/modules/Makefile"
+  #   echo "$(pwd)/src/modules/Makefile"
+  #   # ls -al $out
+  #   echo "CPPFLAGS $CPPFLAGS";
+  #   echo "LDFLAGS $LDFLAGS";
+  # '';
 
   postInstall =
     if libsOnly then
