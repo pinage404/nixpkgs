@@ -145,7 +145,10 @@ stdenv.mkDerivation (finalAttrs: {
     svox
   ]
   ++ lib.optionals withPiper [
-    # piper-tts
+    # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: sd_cxxpiper-cxxpiper.o: undefined reference to symbol 'OrtGetApiBase@@VERS_1.24.4'
+    # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: /nix/store/md5h2z781nmqrk4fg9b9vlgsirqc5k37-onnxruntime-1.24.4/lib/libonnxruntime.so.1: error adding symbols: DSO missing from command line
+    piper-tts
+
     # piper-phonemize
     # rubberband
     # onnxruntime
