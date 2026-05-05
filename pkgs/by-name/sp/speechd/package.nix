@@ -221,8 +221,8 @@ stdenv.mkDerivation (finalAttrs: {
 
       # #include <json.hpp>
       # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L40
+      "-I${lib.getInclude piper-src}/src/cpp"
 
-      # "-I${lib.getInclude piper-src}/src/cpp"
       # "-I${lib.getInclude piper-phonemize}/include"
       # "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
       # "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
