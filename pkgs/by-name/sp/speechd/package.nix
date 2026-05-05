@@ -235,11 +235,13 @@ stdenv.mkDerivation (finalAttrs: {
       # "-I${lib.getInclude onnxruntime.dev}/include"
     ];
     #   CXXFLAGS = finalAttrs.env.CPPFLAGS;
-    #   LDFLAGS = toString [
-    #     "-lpthread"
-    #     "-L${lib.getLib piper-phonemize}/lib"
-    #     "-L${lib.getLib onnxruntime}/lib"
-    #   ];
+    LDFLAGS = toString [
+      #     "-lpthread"
+
+      # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
+      "-L${lib.getLib piper-phonemize}/lib"
+      #     "-L${lib.getLib onnxruntime}/lib"
+    ];
   };
   preConfigure = ''
     echo "$CPPFLAGS $LDFLAGS";
