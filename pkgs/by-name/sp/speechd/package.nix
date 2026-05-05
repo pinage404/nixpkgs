@@ -121,6 +121,10 @@ stdenv.mkDerivation (finalAttrs: {
     # ninja
     # python3Packages.scikit-build
     # python3Packages.setuptools
+
+    # #include <json.hpp>
+    # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L40
+    # piper-src
   ];
 
   buildInputs = [
@@ -152,6 +156,25 @@ stdenv.mkDerivation (finalAttrs: {
     svox
   ]
   ++ lib.optionals withPiper [
+    # #include <speechd_types.h>
+    # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/module_utils.h#L39
+    # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/spd_module_main.h#L32
+    # #include <fdsetconv.h>
+    # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/module_utils.c#L26
+    finalAttrs.src
+
+    # #include <onnxruntime_cxx_api.h>
+    # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L39
+    onnxruntime
+
+    # #include <piper-phonemize/phoneme_ids.hpp>
+    # https://github.com/rhasspy/piper/blob/38917ffd8c0e219c6581d73e07b30ef1d572fce1/src/cpp/piper.hpp#L12
+    piper-phonemize
+
+    # #include <rubberband/RubberBandStretcher.h>
+    # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L44
+    rubberband
+
     # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: sd_cxxpiper-cxxpiper.o: undefined reference to symbol 'OrtGetApiBase@@VERS_1.24.4'
     # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: /nix/store/md5h2z781nmqrk4fg9b9vlgsirqc5k37-onnxruntime-1.24.4/lib/libonnxruntime.so.1: error adding symbols: DSO missing from command line
     piper-tts
@@ -168,15 +191,11 @@ stdenv.mkDerivation (finalAttrs: {
     # onnxruntime-gpu
     # onnxruntime.protobuf
 
-    # #include <rubberband/RubberBandStretcher.h>
-    # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L44
-    rubberband
-
-    # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
-    piper-phonemize
+    # # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
+    # piper-phonemize
 
     # ninja: error: loading 'build.ninja': No such file or directory
-    cmake
+    # cmake
   ];
 
   pythonPath = [
@@ -228,24 +247,24 @@ stdenv.mkDerivation (finalAttrs: {
 
     #   # lib.concatMapStringsSep " " (pkg: "-I${lib.getInclude pkg}/include")
     CPPFLAGS = toString [
-      # #include <speechd_types.h>
-      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/module_utils.h#L39
-      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/spd_module_main.h#L32
-      # #include <fdsetconv.h>
-      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/module_utils.c#L26
-      "-I${lib.getInclude finalAttrs.src}/include"
+      # # #include <speechd_types.h>
+      # # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/module_utils.h#L39
+      # # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/spd_module_main.h#L32
+      # # #include <fdsetconv.h>
+      # # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/module_utils.c#L26
+      # "-I${lib.getInclude finalAttrs.src}/include"
 
-      # #include <onnxruntime_cxx_api.h>
-      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L39
-      "-I${lib.getInclude onnxruntime}/include"
+      # # #include <onnxruntime_cxx_api.h>
+      # # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L39
+      # "-I${lib.getInclude onnxruntime}/include"
 
       # #include <json.hpp>
       # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L40
       "-I${lib.getInclude piper-src}/src/cpp"
 
-      # #include <piper-phonemize/phoneme_ids.hpp>
-      # https://github.com/rhasspy/piper/blob/38917ffd8c0e219c6581d73e07b30ef1d572fce1/src/cpp/piper.hpp#L12
-      "-I${lib.getInclude piper-phonemize}/include"
+      # # #include <piper-phonemize/phoneme_ids.hpp>
+      # # https://github.com/rhasspy/piper/blob/38917ffd8c0e219c6581d73e07b30ef1d572fce1/src/cpp/piper.hpp#L12
+      # "-I${lib.getInclude piper-phonemize}/include"
 
       # # #include <rubberband/RubberBandStretcher.h>
       # # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L44
@@ -255,13 +274,13 @@ stdenv.mkDerivation (finalAttrs: {
       # "-I${lib.getInclude onnxruntime.dev}/include"
     ];
     #   CXXFLAGS = finalAttrs.env.CPPFLAGS;
-    LDFLAGS = toString [
-      #     "-lpthread"
+    # LDFLAGS = toString [
+    #   #     "-lpthread"
 
-      # # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
-      # "-L${lib.getLib piper-phonemize}/lib"
-      #     "-L${lib.getLib onnxruntime}/lib"
-    ];
+    #   # # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
+    #   # "-L${lib.getLib piper-phonemize}/lib"
+    #   #     "-L${lib.getLib onnxruntime}/lib"
+    # ];
   };
   preConfigure = ''
     echo "$CPPFLAGS $LDFLAGS";
