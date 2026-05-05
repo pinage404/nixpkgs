@@ -226,6 +226,10 @@ stdenv.mkDerivation (finalAttrs: {
       # #include <piper-phonemize/phoneme_ids.hpp>
       # https://github.com/rhasspy/piper/blob/38917ffd8c0e219c6581d73e07b30ef1d572fce1/src/cpp/piper.hpp#L12
       "-I${lib.getInclude piper-phonemize}/include"
+
+      # #include <rubberband/RubberBandStretcher.h>
+      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L44
+      "-I${lib.getInclude rubberband}/include"
       # "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
       # "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
       # "-I${lib.getInclude onnxruntime.dev}/include"
