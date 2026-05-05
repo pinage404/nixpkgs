@@ -67,7 +67,6 @@ let
     rev = "2023.11.14-2";
     hash = "sha256-3ynWyNcdf1ffU3VoDqrEMrm5Jo5Zc5YJcVqwLreRCsI=";
   };
-  withPiper = false;
 in
 stdenv.mkDerivation (finalAttrs: {
   preUnpack = ''
@@ -108,8 +107,8 @@ stdenv.mkDerivation (finalAttrs: {
     itstool
     texinfo
     python3Packages.wrapPython
-    autoPatchelfHook
-    python3Packages.setuptools
+    # autoPatchelfHook
+    # python3Packages.setuptools
     # python3Packages.onnxruntime-native
     # python3Packages.piper-phonemize-native
     # python3Packages.piper-phonemize-native.espeak-ng
@@ -147,17 +146,17 @@ stdenv.mkDerivation (finalAttrs: {
   ]
   ++ lib.optionals withPiper [
     # piper-tts
-    piper-phonemize
-    rubberband
-    onnxruntime
+    # piper-phonemize
+    # rubberband
+    # onnxruntime
     # piper-src
     # finalAttrs.src
-    (lib.getLib stdenv.cc.cc)
-    spdlog
-    onnxruntime.dev
-    python3Packages.onnxruntime-tools
+    # (lib.getLib stdenv.cc.cc)
+    # spdlog
+    # onnxruntime.dev
+    # python3Packages.onnxruntime-tools
     # onnxruntime-gpu
-    onnxruntime.protobuf
+    # onnxruntime.protobuf
   ];
 
   pythonPath = [
@@ -203,27 +202,27 @@ stdenv.mkDerivation (finalAttrs: {
     "sysconfdir=${placeholder "out"}/etc"
   ];
 
-  env = lib.attrsets.optionalAttrs withPiper {
-    # needs to be declared twice annoyingly
-    ORT_STRATEGY = "system";
+  # env = lib.attrsets.optionalAttrs withPiper {
+  #   # needs to be declared twice annoyingly
+  #   ORT_STRATEGY = "system";
 
-    # lib.concatMapStringsSep " " (pkg: "-I${lib.getInclude pkg}/include")
-    CPPFLAGS = toString [
-      "-I${lib.getInclude piper-src}/src/cpp"
-      "-I${lib.getInclude finalAttrs.src}/include"
-      "-I${lib.getInclude piper-phonemize}/include"
-      "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
-      "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
-      "-I${lib.getInclude onnxruntime}/include"
-      "-I${lib.getInclude onnxruntime.dev}/include"
-    ];
-    CXXFLAGS = finalAttrs.env.CPPFLAGS;
-    LDFLAGS = toString [
-      "-lpthread"
-      "-L${lib.getLib piper-phonemize}/lib"
-      "-L${lib.getLib onnxruntime}/lib"
-    ];
-  };
+  #   # lib.concatMapStringsSep " " (pkg: "-I${lib.getInclude pkg}/include")
+  #   CPPFLAGS = toString [
+  #     "-I${lib.getInclude piper-src}/src/cpp"
+  #     "-I${lib.getInclude finalAttrs.src}/include"
+  #     "-I${lib.getInclude piper-phonemize}/include"
+  #     "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
+  #     "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+  #     "-I${lib.getInclude onnxruntime}/include"
+  #     "-I${lib.getInclude onnxruntime.dev}/include"
+  #   ];
+  #   CXXFLAGS = finalAttrs.env.CPPFLAGS;
+  #   LDFLAGS = toString [
+  #     "-lpthread"
+  #     "-L${lib.getLib piper-phonemize}/lib"
+  #     "-L${lib.getLib onnxruntime}/lib"
+  #   ];
+  # };
   preConfigure = ''
     echo "$CPPFLAGS $LDFLAGS";
   '';
