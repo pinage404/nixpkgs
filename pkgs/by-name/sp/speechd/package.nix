@@ -44,7 +44,7 @@
   svox,
   runtimeShell,
 
-  withPiper ? true,
+  withPiper ? !true,
   piper-tts,
   piper-phonemize,
   rubberband,
@@ -67,6 +67,7 @@ let
     rev = "2023.11.14-2";
     hash = "sha256-3ynWyNcdf1ffU3VoDqrEMrm5Jo5Zc5YJcVqwLreRCsI=";
   };
+  withPiper = false;
 in
 stdenv.mkDerivation (finalAttrs: {
   preUnpack = ''
