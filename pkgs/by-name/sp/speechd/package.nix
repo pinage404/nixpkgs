@@ -56,6 +56,7 @@
   # onnxruntime-gpu,
   # onnxruntime-native,
   # piper-phonemize-native,
+  # ninja,
   cmake,
 
   libsOnly ? false,
@@ -108,6 +109,8 @@ stdenv.mkDerivation (finalAttrs: {
     itstool
     texinfo
     python3Packages.wrapPython
+    # ninja: error: loading 'build.ninja': No such file or directory
+    # cmake
     # autoPatchelfHook
     # python3Packages.setuptools
     # python3Packages.onnxruntime-native
@@ -115,6 +118,9 @@ stdenv.mkDerivation (finalAttrs: {
     # python3Packages.piper-phonemize-native.espeak-ng
     # python3Packages.piper-phonemize.onnxruntime-native
     # python3Packages.piper-phonemize.piper-phonemize-native
+    # ninja
+    # python3Packages.scikit-build
+    # python3Packages.setuptools
   ];
 
   buildInputs = [
