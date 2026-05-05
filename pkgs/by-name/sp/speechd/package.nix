@@ -44,7 +44,7 @@
   svox,
   runtimeShell,
 
-  withPiper ? !true,
+  withPiper ? true,
   piper-tts,
   piper-phonemize,
   rubberband,
@@ -202,27 +202,39 @@ stdenv.mkDerivation (finalAttrs: {
     "sysconfdir=${placeholder "out"}/etc"
   ];
 
-  # env = lib.attrsets.optionalAttrs withPiper {
-  #   # needs to be declared twice annoyingly
-  #   ORT_STRATEGY = "system";
+  env = lib.attrsets.optionalAttrs withPiper {
+    #   # needs to be declared twice annoyingly
+    #   ORT_STRATEGY = "system";
 
-  #   # lib.concatMapStringsSep " " (pkg: "-I${lib.getInclude pkg}/include")
-  #   CPPFLAGS = toString [
-  #     "-I${lib.getInclude piper-src}/src/cpp"
-  #     "-I${lib.getInclude finalAttrs.src}/include"
-  #     "-I${lib.getInclude piper-phonemize}/include"
-  #     "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
-  #     "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
-  #     "-I${lib.getInclude onnxruntime}/include"
-  #     "-I${lib.getInclude onnxruntime.dev}/include"
-  #   ];
-  #   CXXFLAGS = finalAttrs.env.CPPFLAGS;
-  #   LDFLAGS = toString [
-  #     "-lpthread"
-  #     "-L${lib.getLib piper-phonemize}/lib"
-  #     "-L${lib.getLib onnxruntime}/lib"
-  #   ];
-  # };
+    #   # lib.concatMapStringsSep " " (pkg: "-I${lib.getInclude pkg}/include")
+    CPPFLAGS = toString [
+      # #include <speechd_types.h>
+      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/module_utils.h#L39
+      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/spd_module_main.h#L32
+      # #include <fdsetconv.h>
+      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/module_utils.c#L26
+      "-I${lib.getInclude finalAttrs.src}/include"
+
+      # #include <onnxruntime_cxx_api.h>
+      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L39
+      "-I${lib.getInclude onnxruntime}/include"
+
+      # #include <json.hpp>
+      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L40
+
+      # "-I${lib.getInclude piper-src}/src/cpp"
+      # "-I${lib.getInclude piper-phonemize}/include"
+      # "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
+      # "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
+      # "-I${lib.getInclude onnxruntime.dev}/include"
+    ];
+    #   CXXFLAGS = finalAttrs.env.CPPFLAGS;
+    #   LDFLAGS = toString [
+    #     "-lpthread"
+    #     "-L${lib.getLib piper-phonemize}/lib"
+    #     "-L${lib.getLib onnxruntime}/lib"
+    #   ];
+  };
   preConfigure = ''
     echo "$CPPFLAGS $LDFLAGS";
   '';
