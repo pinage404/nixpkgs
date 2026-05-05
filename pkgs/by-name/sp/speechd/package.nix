@@ -168,6 +168,10 @@ stdenv.mkDerivation (finalAttrs: {
     # onnxruntime-gpu
     # onnxruntime.protobuf
 
+    # #include <rubberband/RubberBandStretcher.h>
+    # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L44
+    rubberband
+
     # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
     piper-phonemize
 
@@ -243,9 +247,9 @@ stdenv.mkDerivation (finalAttrs: {
       # https://github.com/rhasspy/piper/blob/38917ffd8c0e219c6581d73e07b30ef1d572fce1/src/cpp/piper.hpp#L12
       "-I${lib.getInclude piper-phonemize}/include"
 
-      # #include <rubberband/RubberBandStretcher.h>
-      # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L44
-      "-I${lib.getInclude rubberband}/include"
+      # # #include <rubberband/RubberBandStretcher.h>
+      # # https://github.com/brailcom/speechd/blob/60b1e9ef1d3a49f4661e6c8772f923193ee64777/src/modules/cxxpiper.cpp#L44
+      # "-I${lib.getInclude rubberband}/include"
       # "-I${lib.getInclude piper-phonemize}/include/onnxruntime"
       # "-I${lib.getInclude piper-phonemize}/include/piper-phonemize"
       # "-I${lib.getInclude onnxruntime.dev}/include"
