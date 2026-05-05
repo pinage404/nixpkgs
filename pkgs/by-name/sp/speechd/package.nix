@@ -168,6 +168,9 @@ stdenv.mkDerivation (finalAttrs: {
     # onnxruntime-gpu
     # onnxruntime.protobuf
 
+    # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
+    piper-phonemize
+
     # ninja: error: loading 'build.ninja': No such file or directory
     cmake
   ];
@@ -251,8 +254,8 @@ stdenv.mkDerivation (finalAttrs: {
     LDFLAGS = toString [
       #     "-lpthread"
 
-      # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
-      "-L${lib.getLib piper-phonemize}/lib"
+      # # /nix/store/p2vkw5s89ff1fs2d2rxqxiqil9s0jpcm-binutils-2.46/bin/ld.bfd: cannot find -lpiper_phonemize: No such file or directory
+      # "-L${lib.getLib piper-phonemize}/lib"
       #     "-L${lib.getLib onnxruntime}/lib"
     ];
   };
